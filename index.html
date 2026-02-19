@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ramadan Mubarak - Tunisia</title>
+    <title>Ramadan Mubarak - Tunisia Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -54,24 +54,10 @@
         h1 { color: var(--gold); font-size: 3.5rem; margin: 0; }
         h2 { font-style: italic; color: #fff; font-size: 2rem; margin: 10px 0 20px 0; font-family: 'Playfair Display', serif; }
         
-        .message {
-            color: var(--soft-white);
-            font-size: 1.1rem;
-            line-height: 1.8;
+        .date-display {
+            color: var(--gold);
             margin-bottom: 20px;
-        }
-
-        #citySearch {
-            width: 80%;
-            max-width: 400px;
-            padding: 12px;
-            margin-bottom: 20px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid var(--gold);
-            border-radius: 25px;
-            color: white;
-            text-align: center;
-            outline: none;
+            font-size: 1.2rem;
             font-family: sans-serif;
         }
 
@@ -87,7 +73,6 @@
         th { background: rgba(212, 175, 55, 0.2); color: var(--gold); padding: 18px; }
         td { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: sans-serif; }
 
-        /* REFINED SIGNATURE */
         .footer {
             margin-top: 50px;
             text-align: center;
@@ -105,9 +90,9 @@
             font-style: italic;
             display: block;
             margin-top: 5px;
-            letter-spacing: 8px; /* High-end fashion look */
+            letter-spacing: 8px;
             text-shadow: 2px 2px 10px rgba(212, 175, 55, 0.3);
-            text-transform: none; /* Keeps the "A" as a proper capital */
+            text-transform: none;
         }
 
         @keyframes float {
@@ -124,15 +109,10 @@
         <div class="moon">🌙</div>
         <h1>RAMADAN</h1>
         <h2>Mubarak</h2>
-        <p class="message">
-            May this holy month bring you peace, prosperity, and spiritual growth.<br>
-            May your prayers be answered and your heart be filled with light.
-        </p>
-
-        <input type="text" id="citySearch" onkeyup="filterTable()" placeholder="Search your city in Tunisia...">
+        <div id="currentDate" class="date-display">Loading date...</div>
 
         <div class="table-container">
-            <table id="prayerTable">
+            <table>
                 <thead>
                     <tr>
                         <th>Region</th>
@@ -140,16 +120,8 @@
                         <th>Maghrib (Iftar)</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr><td>Tunis</td><td>05:18 AM</td><td>06:15 PM</td></tr>
-                    <tr><td>Ben Arous</td><td>05:18 AM</td><td>06:15 PM</td></tr>
-                    <tr><td>Sfax</td><td>05:14 AM</td><td>06:12 PM</td></tr>
-                    <tr><td>Sousse</td><td>05:16 AM</td><td>06:13 PM</td></tr>
-                    <tr><td>Kairouan</td><td>05:17 AM</td><td>06:14 PM</td></tr>
-                    <tr><td>Bizerte</td><td>05:20 AM</td><td>06:17 PM</td></tr>
-                    <tr><td>Gabès</td><td>05:13 AM</td><td>06:11 PM</td></tr>
-                    <tr><td>Gafsa</td><td>05:19 AM</td><td>06:16 PM</td></tr>
-                    <tr><td>Tozeur</td><td>05:22 AM</td><td>06:20 PM</td></tr>
+                <tbody id="prayerBody">
+                    <tr><td colspan="3">Fetching live times for Tunisia...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -161,20 +133,36 @@
     </div>
 
     <script>
-        function filterTable() {
-            var input, filter, table, tr, td, i, txtValue;
-            input = document.getElementById("citySearch");
-            filter = input.value.toUpperCase();
-            table = document.getElementById("prayerTable");
-            tr = table.getElementsByTagName("tr");
-            for (i = 1; i < tr.length; i++) {
-                td = tr[i].getElementsByTagName("td")[0];
-                if (td) {
-                    txtValue = td.textContent || td.innerText;
-                    tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+        const cities = ["Tunis", "Ben Arous", "Sfax", "Sousse", "Kairouan", "Bizerte", "Gabes", "Gafsa", "Tozeur"];
+        
+        async function getPrayerTimes() {
+            const tableBody = document.getElementById('prayerBody');
+            const dateDisplay = document.getElementById('currentDate');
+            tableBody.innerHTML = ""; 
+
+            // Set current date string
+            const now = new Date();
+            dateDisplay.innerText = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            for (let city of cities) {
+                try {
+                    const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=Tunisia&method=3`);
+                    const data = await response.json();
+                    const times = data.data.timings;
+
+                    const row = `<tr>
+                        <td>${city}</td>
+                        <td style="color: #f1c40f;">${times.Fajr}</td>
+                        <td style="color: #f1c40f;">${times.Maghrib}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                } catch (error) {
+                    console.error("Error fetching times for " + city);
                 }
             }
         }
+
+        getPrayerTimes();
     </script>
 </body>
 </html>
